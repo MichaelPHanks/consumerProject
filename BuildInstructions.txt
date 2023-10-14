@@ -1,0 +1,19 @@
+GETTING STARTED:
+
+    1. Make sure you have python installed.
+    2. Intsall boto3 aws SDK with the command below:
+        - pip install boto3
+
+INSTRUCTIONS FOR RUNNING consumer.py:
+
+    1. Open a command line, and navigate to the folder in which consumer.py is located.
+    2. Type into the command line the following:
+
+        a) python3 consumer.py {BucketFrom} {BucketTo/TableTo} {-bucket/-table}
+
+            - BucketFrom --> Bucket in which the requests reside
+            - BucketTo/TableTo --> Bucket or DynamoDB Table in which creation objects should go top
+            - -bucket/-table --> write -bucket if above option is S3 bucket, or -table if above option is DynamoDB Table
+
+        Example:
+            python3 consumer.py usu-cs5260-miketa-requests usu-cs5260-miketa-web -bucket
