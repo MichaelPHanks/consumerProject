@@ -7,3 +7,6 @@ What is done:
         d) Fourth argument:
             - '-bucket' --> third argument is a bucket
             - '-table' --> third argument is a table
+    3. Set up functionality for deleting the top object after being processed.
+    4. Set up functionality for creating object when type of request is 'create', and places the new object into specified s3 bucket.
+
