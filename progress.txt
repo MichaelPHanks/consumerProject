@@ -1,0 +1,9 @@
+What is done:
+    1. Set up functionality for getting top object from a bucket, and displaying its contents with JSON.
+    2. Set up functionality for command-line arguments for storage strategy and resources to use.
+        a) First argument: python3
+        b) Second argument: Name of bucket to grab widgets from.
+        c) Third argument: Named of bucket/DB table to place widgets.
+        d) Fourth argument:
+            - '-bucket' --> third argument is a bucket
+            - '-table' --> third argument is a table
