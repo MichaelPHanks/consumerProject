@@ -17,3 +17,10 @@ INSTRUCTIONS FOR RUNNING consumer.py:
 
         Example:
             python3 consumer.py usu-cs5260-miketa-requests usu-cs5260-miketa-web -bucket
+
+Note:
+    The logging file will be replaced each time you run the program. Edit the 'logging.basicConfig(filename="consumer.log",
+    format='%(asctime)s %(message)s',
+    filemode='w')' line of code to change this. 
+                    
+    Modify the filename for different locations on each run, if needed.

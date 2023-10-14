@@ -2,7 +2,7 @@
 import json
 import sys
 import boto3
-
+import logging
 import time
 
 def main():
@@ -19,6 +19,12 @@ def main():
 
 
 def consumer(bucket2, destination, isTable):
+    logging.basicConfig(filename="consumer.log",
+                    format='%(asctime)s %(message)s',
+                    filemode='w')
+    logger = logging.getLogger()
+
+    logger.setLevel(logging.INFO)
     s3 = boto3.client("s3")
     startTime = time.time()
     endTime = time.time()
@@ -44,7 +50,7 @@ def consumer(bucket2, destination, isTable):
 
                     widget_request_str = widget['Body'].read().decode('utf-8')
                     widget_request = json.loads(widget_request_str)
-                    print(widget_request)
+                    #print(widget_request)
                     if widget_request['type'] == 'create':
                         if isTable:
                             print("Copying to specified DynamoDB table...")
@@ -52,10 +58,16 @@ def consumer(bucket2, destination, isTable):
                             print("Copying to specified s3 bucket...")
                             object_key = 'widgets/' + widget_request['owner'] + '/' + widget_request['widgetId']
                             s3.put_object(Bucket=destination, Key=object_key)
-                            print(object_key)
+                            #print(object_key)
                             count +=1
+                            logger.info("Created new object " + widget_request['widgetId'])
 
                         ## write it into the new table
+                    if widget_request['type'] == 'update':
+                        logger.info("'Updated' (did not actually happen) object "+ widget_request['widgetId'])
+
+                    if widget_request['type'] == 'delete':
+                        logger.info("'Deleted' (not actually deleted) object "+ widget_request['widgetId'])
 
 
                     deleteResponse = s3.delete_object(Bucket=bucket2, Key=key)
