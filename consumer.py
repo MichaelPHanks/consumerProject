@@ -11,9 +11,6 @@ def main():
     isTable = False
     if sys.argv[3] == '-table':
         isTable = True
-    print(bucket2)
-    print(destination)
-
 
     consumer(bucket2, destination, isTable)
 
@@ -29,7 +26,6 @@ def consumer(bucket2, destination, isTable):
     database = boto3.resource("dynamodb")
     startTime = time.time()
     endTime = time.time()
-    count = 0
     while endTime - startTime < 50:
 
         try:
@@ -42,13 +38,11 @@ def consumer(bucket2, destination, isTable):
             if request['KeyCount'] == 1:
                 startTime = time.time()
                 endTime = time.time()
-                #print(request)
-            #if request['KeyCount'] == 1:
                 for i in range(request['KeyCount']):
                     key = request['Contents'][i]['Key']
                     ##Grabbing top object
                     widget = s3.get_object(Bucket=bucket2, Key=key)
-                    deleteResponse = s3.delete_object(Bucket=bucket2, Key=key)
+                    s3.delete_object(Bucket=bucket2, Key=key)
 
 
                     ##Converting to python object
@@ -56,23 +50,20 @@ def consumer(bucket2, destination, isTable):
                     widget_request = json.loads(widget_request_str)
                     if widget_request['type'] == 'create':
                         if isTable:
-                            #print("Copying to specified DynamoDB table...")
+                            print("Creating widget " + widget_request['widgetId']+", and placing in specified DynamoDB table...")
                             widget_request['id'] = widget_request['widgetId']
                             table = database.Table(destination)
+
                             widget_request = parseRequest(widget_request)
-                            #print(widget_request)
 
                             table.put_item(Item=widget_request)
                             logger.info("Created new object " + widget_request['widgetId'] + " and place it into dynamodb table " + destination)
                         else:
-                            #print("Copying to specified s3 bucket...")
-                            object_key = 'widgets/' + widget_request['owner'] + '/' + widget_request['widgetId']
+                            print("Creating widget " + widget_request['widgetId']+", and placing in specified s3 bucket...")
+                            object_key = 'widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId']
                             s3.put_object(Bucket=destination, Key=object_key, Body=json.dumps(widget_request))
-                            #print(object_key)
-                            count +=1
                             logger.info("Created new object " + widget_request['widgetId'] + " and placed it into s3 bucket " + destination)
 
-                        ## write it into the new table
                     ## For future implementation....
                     if widget_request['type'] == 'update':
                         logger.info("'Updated' (did not actually happen) object "+ widget_request['widgetId'])
@@ -91,22 +82,27 @@ def consumer(bucket2, destination, isTable):
         except Exception as e:
             print(e)
 
-    #print("Count is : ",count)
     if endTime - startTime >= 50:
         print("Program exited: no widgets found in last 50 seconds in bucket ", bucket2)
 
 
 
 
+def convertOwner(name):
+    name = name.lower()
+    name = name.replace(" ", "-")
 
+
+    return name
 
 def parseRequest(request):
-    for i in range(len(request['otherAttributes'])):
-        newName = request['otherAttributes'][i]['name']
-        newValue = request['otherAttributes'][i]['value']
-        request[newName] =newValue
+    if 'otherAttributes' in request:
+        for i in range(len(request['otherAttributes'])):
+            newName = request['otherAttributes'][i]['name']
+            newValue = request['otherAttributes'][i]['value']
+            request[newName] =newValue
 
-    request.pop('otherAttributes')
+        request.pop('otherAttributes')
     return request
 
 
