@@ -15,3 +15,8 @@ What still needs to be done:
     2. Create functionality for adding object to DynamoDB table.
     3. Create Unit Test functionality.
     4. Create log file functionality.
+
+
+10/18/2023 -> Completed Log file functionality, adding all data to new object, and functionality for adding object to DynamoDB table.
+            Things to still do:
+                1. Create Unit Test functionality.

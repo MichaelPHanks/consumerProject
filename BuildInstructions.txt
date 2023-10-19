@@ -15,8 +15,14 @@ INSTRUCTIONS FOR RUNNING consumer.py:
             - BucketTo/TableTo --> Bucket or DynamoDB Table in which creation objects should go top
             - -bucket/-table --> write -bucket if above option is S3 bucket, or -table if above option is DynamoDB Table
 
+            NOTE: Current BucketFrom on my aws profile: usu-cs5260-miketa-requests
+            NOTE: Current BucketTo on my aws profile: usu-cs5260-miketa-web
+            NOTE: Current TableTo on my aws profile: widgets
+
         Example:
             python3 consumer.py usu-cs5260-miketa-requests usu-cs5260-miketa-web -bucket
+            python3 consumer.py usu-cs5260-miketa-requests widgets -table
+
 
 Note:
     The logging file will be replaced each time you run the program. Edit the 'logging.basicConfig(filename="consumer.log",
@@ -24,3 +30,7 @@ Note:
     filemode='w')' line of code to change this. 
                     
     Modify the filename for different locations on each run, if needed.
+
+
+Amazon CLI Credentials:
+    This program relies on CLI being installed, with correct credentials in place.

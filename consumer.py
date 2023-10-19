@@ -26,6 +26,7 @@ def consumer(bucket2, destination, isTable):
 
     logger.setLevel(logging.INFO)
     s3 = boto3.client("s3")
+    database = boto3.resource("dynamodb")
     startTime = time.time()
     endTime = time.time()
     count = 0
@@ -41,36 +42,46 @@ def consumer(bucket2, destination, isTable):
             if request['KeyCount'] == 1:
                 startTime = time.time()
                 endTime = time.time()
-
+                #print(request)
             #if request['KeyCount'] == 1:
                 for i in range(request['KeyCount']):
-                    # Delete the object...
                     key = request['Contents'][i]['Key']
-                    widget = s3.get_object(Bucket=bucket2, Key=request['Contents'][i]['Key'])
+                    ##Grabbing top object
+                    widget = s3.get_object(Bucket=bucket2, Key=key)
+                    deleteResponse = s3.delete_object(Bucket=bucket2, Key=key)
 
+
+                    ##Converting to python object
                     widget_request_str = widget['Body'].read().decode('utf-8')
                     widget_request = json.loads(widget_request_str)
-                    #print(widget_request)
                     if widget_request['type'] == 'create':
                         if isTable:
-                            print("Copying to specified DynamoDB table...")
+                            #print("Copying to specified DynamoDB table...")
+                            widget_request['id'] = widget_request['widgetId']
+                            table = database.Table(destination)
+                            widget_request = parseRequest(widget_request)
+                            #print(widget_request)
+
+                            table.put_item(Item=widget_request)
+                            logger.info("Created new object " + widget_request['widgetId'] + " and place it into dynamodb table " + destination)
                         else:
-                            print("Copying to specified s3 bucket...")
+                            #print("Copying to specified s3 bucket...")
                             object_key = 'widgets/' + widget_request['owner'] + '/' + widget_request['widgetId']
-                            s3.put_object(Bucket=destination, Key=object_key)
+                            s3.put_object(Bucket=destination, Key=object_key, Body=json.dumps(widget_request))
                             #print(object_key)
                             count +=1
-                            logger.info("Created new object " + widget_request['widgetId'])
+                            logger.info("Created new object " + widget_request['widgetId'] + " and placed it into s3 bucket " + destination)
 
                         ## write it into the new table
+                    ## For future implementation....
                     if widget_request['type'] == 'update':
                         logger.info("'Updated' (did not actually happen) object "+ widget_request['widgetId'])
 
                     if widget_request['type'] == 'delete':
                         logger.info("'Deleted' (not actually deleted) object "+ widget_request['widgetId'])
 
+                    # Delete the object...
 
-                    deleteResponse = s3.delete_object(Bucket=bucket2, Key=key)
 
             else:
                 endTime = time.time()
@@ -80,11 +91,23 @@ def consumer(bucket2, destination, isTable):
         except Exception as e:
             print(e)
 
-    print("Count is : ",count)
+    #print("Count is : ",count)
     if endTime - startTime >= 50:
         print("Program exited: no widgets found in last 50 seconds in bucket ", bucket2)
 
 
+
+
+
+
+def parseRequest(request):
+    for i in range(len(request['otherAttributes'])):
+        newName = request['otherAttributes'][i]['name']
+        newValue = request['otherAttributes'][i]['value']
+        request[newName] =newValue
+
+    request.pop('otherAttributes')
+    return request
 
 
 
