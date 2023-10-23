@@ -9,19 +9,24 @@ INSTRUCTIONS FOR RUNNING consumer.py:
     1. Open a command line, and navigate to the folder in which consumer.py is located.
     2. Type into the command line the following:
 
-        a) python3 consumer.py {BucketFrom} {BucketTo/TableTo} {-bucket/-table}
+        a) python3 consumer.py {BucketFrom/QueueFrom} {-s3/-sqs} {BucketTo/TableTo} {-bucket/-table}
 
-            - BucketFrom --> Bucket in which the requests reside
+            - BucketFrom/QueueFrom --> Bucket or SQS Queue in which the requests reside
+            - -s3/-sqs --> write -s3 if above option is S3 bucket, or -sqs uf above option is SQS Queue
             - BucketTo/TableTo --> Bucket or DynamoDB Table in which creation objects should go top
             - -bucket/-table --> write -bucket if above option is S3 bucket, or -table if above option is DynamoDB Table
 
+
             NOTE: Current BucketFrom on my aws profile: usu-cs5260-miketa-requests
+            NOTE: Current QueueFrom on my aws profile: cs5260-requests
             NOTE: Current BucketTo on my aws profile: usu-cs5260-miketa-web
             NOTE: Current TableTo on my aws profile: widgets
 
         Example:
-            python3 consumer.py usu-cs5260-miketa-requests usu-cs5260-miketa-web -bucket
-            python3 consumer.py usu-cs5260-miketa-requests widgets -table
+            python3 consumer.py usu-cs5260-miketa-requests -s3 usu-cs5260-miketa-web -bucket
+            python3 consumer.py usu-cs5260-miketa-requests -s3 widgets -table
+            python3 consumer.py cs5260-requests -sqs widgets -table
+            python3 consumer.py cs5260-requests -sqs usu-cs5260-miketa-web -bucket
 
 LOGGING INFO:
     Note:
