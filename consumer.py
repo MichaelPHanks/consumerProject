@@ -52,7 +52,6 @@ def grabFromSQS(queue, destination, isTable, sqs, s3, endTime, database, logger,
         QueueUrl=queue,
         MaxNumberOfMessages=10,
     )
-    entries = []
     if 'Messages' in response:
         if len(response['Messages']) > 0:
             startTime = time.time()
@@ -78,7 +77,6 @@ def grabFromSQS(queue, destination, isTable, sqs, s3, endTime, database, logger,
                         table.put_item(Item=body)
                         logger.info("Created new object " + body['widgetId'] + " and placed it into dynamodb table " + destination)
                     else:
-                        #print("Got to here...")
 
                         print("Creating widget " + body['widgetId']+", and placing in specified s3 bucket...")
                         object_key = 'widgets/' + convertOwner(body['owner']) + '/' + body['widgetId']
@@ -89,23 +87,104 @@ def grabFromSQS(queue, destination, isTable, sqs, s3, endTime, database, logger,
 
 
 
+                if body['type'] == 'update':
+                    if isTable:
+                        table = database.Table(destination)
+                        oldRequest = table.get_item(
+                            Key={'id': body['widgetId']}
+                        )
+                        if oldRequest:
+                            body['id'] = body['widgetId']
+                            if 'Item' in oldRequest:
+                                newWidget = updateWidget(oldRequest['Item'], parseRequest(body))
+                                table.delete_item(
+                                    Key={'id': body['widgetId']}
 
-                elif body['type'] == "update":
-                    print("update")
-                elif body['type'] == "delete":
-                    print("delete")
-                entries.append({'Id' : messageId, 'ReceiptHandle': reciept})
+                                )
+                                table.put_item(Item=newWidget)
+                                logger.info("Updated object "+ body['widgetId'])
+                                print("Updated object " + body['widgetId'])
+
+                        else:
+                            logger.warning('widgets/' + convertOwner(body['owner']) + '/' + body['widgetId'] + " does not exist...")
+
+                    else:
+                        oldRequest = s3.get_object(
+                            Bucket=destination,
+                            Key='widgets/' + convertOwner(body['owner']) + '/' + body['widgetId']
+                        )
+
+                        if oldRequest:
+                            oldRequest = oldRequest['Body'].read().decode('utf-8')
+                            oldRequest = json.loads(oldRequest)
+                            newWidget = updateWidget(parseRequest(oldRequest), parseRequest(body))
+                            s3.delete_object(
+                                Bucket=destination,
+                                Key='widgets/' + convertOwner(body['owner']) + '/' + body['widgetId']
+                            )
+                            s3.put_object(Bucket=destination,Key='widgets/' + convertOwner(newWidget['owner']) + '/' + newWidget['widgetId'], Body=json.dumps(newWidget) )
+                            logger.info("Updated object "+ body['widgetId'])
+                            print("Updated object " + body['widgetId'])
+                        else:
+                            logger.warning('widgets/' + convertOwner(body['owner']) + '/' + body['widgetId'] + " does not exist...")
+
+
+
+                if body['type'] == 'delete':
+                    if isTable:
+                        table = database.Table(destination)
+
+                        item = table.get_item(
+                            Key={'id': body['widgetId']}
+                        )
+                        if item:
+                            table.delete_item(
+                                Key={'id': body['widgetId']}
+
+                            )
+                            logger.info("Deleted key "  + body['widgetId'])
+                            print("Deleted object " + body['widgetId'])
+                        else:
+                            logger.warning('widgets/' + convertOwner(body['owner']) + '/' + body['widgetId'] + " does not exist...")
+
+
+                    else:
+                        item = s3.get_object(
+                            Bucket=destination,
+                            Key='widgets/' + convertOwner(body['owner']) + '/' + body['widgetId']
+                        )
+                        if item:
+                            s3.delete_object(
+                                Bucket=destination,
+                                Key='widgets/' + convertOwner(body['owner']) + '/' + body['widgetId']
+                            )
+                            logger.info("Deleted key "  + body['widgetId'])
+                            print("Deleted object " + body['widgetId'])
+
+                        else:
+                            logger.warning('widgets/' + convertOwner(body['owner']) + '/' + body['widgetId'] + " does not exist...")
+                sqs.delete_message(
+                    QueueUrl=queue,
+                    ReceiptHandle=reciept
+                   
+                )
         
     else:
         endTime = time.time()
         time.sleep(0.1)
-    if len(entries) > 0:
-        sqs.delete_message_batch(
-            QueueUrl=queue,
-            Entries=entries
-        )
+    
 
     return endTime, startTime, count
+
+
+
+
+
+
+
+
+
+
 
 def grabFromBucket(bucket2, destination, isTable, s3, endTime, database, logger, startTime):
     request = s3.list_objects_v2(
@@ -143,12 +222,89 @@ def grabFromBucket(bucket2, destination, isTable, s3, endTime, database, logger,
                     s3.put_object(Bucket=destination, Key=object_key, Body=json.dumps(widget_request))
                     logger.info("Created new object " + widget_request['widgetId'] + " and placed it into s3 bucket " + destination)
 
-            ## For future implementation....
             if widget_request['type'] == 'update':
-                logger.info("'Updated' (did not actually happen) object "+ widget_request['widgetId'])
+                if isTable:
+                    table = database.Table(destination)
+
+                    oldRequest = table.get_item(
+                        Key={'id': widget_request['widgetId']}
+                    )
+                    if oldRequest:
+                        widget_request['id'] = widget_request['widgetId']
+                        newWidget = updateWidget(oldRequest['Item'], parseRequest(widget_request))
+                        table.delete_item(
+                            Key={'id': widget_request['widgetId']}
+
+                        )
+                        table.put_item(Item=newWidget)
+                        logger.info("Updated object "+ widget_request['widgetId'])
+                        print("Updated object " + widget_request['widgetId'])
+
+                    else:
+                        logger.warning('widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId'] + " does not exist...")
+
+                else:
+                    oldRequest = s3.get_object(
+                        Bucket=destination,
+                        Key='widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId']
+                    )
+                    if oldRequest:
+                        oldRequest = oldRequest['Body'].read().decode('utf-8')
+                        oldRequest = json.loads(oldRequest)
+                        newWidget = updateWidget(parseRequest(oldRequest), parseRequest(widget_request))
+                        s3.delete_object(
+                            Bucket=destination,
+                            Key='widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId']
+                        )
+                        s3.put_object(Bucket=destination,Key='widgets/' + convertOwner(newWidget['owner']) + '/' + newWidget['widgetId'], Body=json.dumps(newWidget) )
+                        logger.info("Updated object "+ widget_request['widgetId'])
+                        print("Updated object " + widget_request['widgetId'])
+                    else:
+                        logger.warning('widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId'] + " does not exist...")
+
+
 
             if widget_request['type'] == 'delete':
-                logger.info("'Deleted' (not actually deleted) object "+ widget_request['widgetId'])
+                if isTable:
+                    table = database.Table(destination)
+
+                    item = table.get_item(
+                        Key={'id': widget_request['widgetId']}
+                    )
+                    if item:
+                        table.delete_item(
+                            Key={'id': widget_request['widgetId']}
+
+                        )
+                        logger.info("Deleted key "  + widget_request['widgetId'])
+                        print("Deleted object " + widget_request['widgetId'])
+                    else:
+                        logger.warning('widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId'] + " does not exist...")
+
+
+                else:
+                    item = s3.get_object(
+                        Bucket=destination,
+                        Key='widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId']
+                    )
+                    if item:
+                        s3.delete_object(
+                            Bucket=destination,
+                            Key='widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId']
+                        )
+                        logger.info("Deleted key "  + widget_request['widgetId'])
+                        print("Deleted object " + widget_request['widgetId'])
+
+                    else:
+                        logger.warning('widgets/' + convertOwner(widget_request['owner']) + '/' + widget_request['widgetId'] + " does not exist...")
+
+                       
+
+
+
+
+
+
 
             # Delete the object...
     else:
@@ -175,6 +331,21 @@ def parseRequest(request):
 
         request.pop('otherAttributes')
     return request
+
+def updateWidget(oldRequest, newRequest):
+    updatedRequest = oldRequest
+    for item in newRequest:
+        if item in updatedRequest and item != 'id' and item != 'owner':
+            if newRequest[item] == '':
+                updatedRequest.pop(item)
+            else:
+                updatedRequest[item] = newRequest[item]
+        elif item not in updatedRequest and item != 'widgetId' and item != 'owner':
+            updatedRequest[item] = newRequest[item]
+
+    return updatedRequest
+    
+
 
 
 

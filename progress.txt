@@ -43,7 +43,7 @@ HW3 Analysis:
             a) user can specify queue name on command line. --- DONE
             b) can still grab s3 bucket if specified on command line --- DONE
                 - Change command line arguments functionality to accept a different type of location for grabbing widgets from. --- DONE
-            c) Update consumer to process Delete and Update Widget requests.
+            c) Update consumer to process Delete and Update Widget requests. --- DONE
                 - Notes: after recieving a message (containing a request) and processing the request, 
                     the consumer program must delete the message from the queue using the messages receipt handle.
                 - To optimize the use of the queue, you can read up to 10 messages at a time. Your message
@@ -53,9 +53,9 @@ HW3 Analysis:
 
         3. Test the changes, make sure that they work... --> Difficulty Rating: 3
             a) Create new tests for new functionality added.
-            b) Write meaningful messages to a log file.
+            b) Write meaningful messages to a log file. --- DONE
                 - Already implemented for the most part, but I can probably make changes for a more thorough log file.
-            c) Run two instances of consumer program in separate windows, and producer in a third.
+            c) Run two instances of consumer program in separate windows, and producer in a third. --- DONE
                 - You can use the “--max-widget-requests” (or “-mwr”) command-line
                     argument set the limit of requests, if you like, but try it with at least 100. You should see each
                     instance of the Consumer processes different requests. You may see a few failed Update or
@@ -77,4 +77,9 @@ HW3 Analysis:
         8. Answer the following questions:
             a) Why is it possible tthat Update and Delete Widget Requests may fail, even when you were running just one Consumer?
             b) How would this possible behavior impact the design of distributed applications that use queues?
+
+
+
+
+
 

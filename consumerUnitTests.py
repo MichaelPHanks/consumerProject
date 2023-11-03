@@ -26,6 +26,9 @@ class Test(unittest.TestCase):
         self.assertEqual(parseRequest(givenRequest), {'name': 'michael', 'sizeType': 'feet', 'height': 6})
         self.assertEqual(parseRequest(givenWrongRequest), givenWrongRequest)
 
+    def test_updateRequest(self):
+        print("YEah")
+
     
 
 
