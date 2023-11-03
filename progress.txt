@@ -28,58 +28,13 @@ What still needs to be done:
 
 
 
-HW3 Analysis:
-    Major things to get done:
-        Difficulty scale:
-            1 --> Easy
-            5 --> Hard
-
-
-
-        1. Setup a queue --> Difficulty Rating: 1 --- DONE
-            a) Take a snapshot of this after creating, including account id in photo. --- DONE
-
-        2. Refine design, changing from grabbing widgets from bucket to SQS queue. --> Difficulty Rating: 4
-            a) user can specify queue name on command line. --- DONE
-            b) can still grab s3 bucket if specified on command line --- DONE
-                - Change command line arguments functionality to accept a different type of location for grabbing widgets from. --- DONE
-            c) Update consumer to process Delete and Update Widget requests. --- DONE
-                - Notes: after recieving a message (containing a request) and processing the request, 
-                    the consumer program must delete the message from the queue using the messages receipt handle.
-                - To optimize the use of the queue, you can read up to 10 messages at a time. Your message
-                    retrieving software component could still return just one message but cache the others and
-                    return them in subsequent calls to that method or function.
-            d) Update BuildInstructions.txt --- DONE
-
-        3. Test the changes, make sure that they work... --> Difficulty Rating: 3
-            a) Create new tests for new functionality added.
-            b) Write meaningful messages to a log file. --- DONE
-                - Already implemented for the most part, but I can probably make changes for a more thorough log file.
-            c) Run two instances of consumer program in separate windows, and producer in a third. --- DONE
-                - You can use the “--max-widget-requests” (or “-mwr”) command-line
-                    argument set the limit of requests, if you like, but try it with at least 100. You should see each
-                    instance of the Consumer processes different requests. You may see a few failed Update or
-                    Delete requests. Do not worry about these errors at this point but think about why they might
-                    be occurring.
-                - Take snapshots of the screen that show at least two Consumers running concurrently and submit these with
-                    deliverables for the assignment.
-
-        4. Package into a Docker image and Deploy to Local Containers. --> Difficulty Rating: 3
-            1) Can do this on either my own machine or on an EC2 instance.
-                - Install Docker.
-            2) Create Dockerfile
-                - Specifies runtime environment
-                - Copies program into the Container
-                - Specifies a command that will run my program
-        5. Push Image to a Docker Image repository --> Difficulty Rating: 3
-        6. Deploy containers on a ecs cluster (optional - extra credit) --> Difficulty Rating: 2
-        7. Make sure that I am pushing to git repository frequently.
-        8. Answer the following questions:
-            a) Why is it possible tthat Update and Delete Widget Requests may fail, even when you were running just one Consumer?
-            b) How would this possible behavior impact the design of distributed applications that use queues?
 
 
 
 
+
+Issues: For some reason, when using the update and delete when using SQS Queue, we are getting fails. I believe this is because the 
+queue is not declared a FIFO queue. Also, we are getting fails when destination is S3 bucket, and not when using DynamoDB table.
+Current implementation is that when we get a failure, we do not delete it, and we move on to the next request.
 
 

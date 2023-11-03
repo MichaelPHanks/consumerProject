@@ -1,6 +1,8 @@
 import unittest
 from consumer import convertOwner
 from consumer import parseRequest
+from consumer import updateWidget
+
 
 class Test(unittest.TestCase):
     def test_convertOwner(self):
@@ -27,7 +29,12 @@ class Test(unittest.TestCase):
         self.assertEqual(parseRequest(givenWrongRequest), givenWrongRequest)
 
     def test_updateRequest(self):
-        print("YEah")
+        widgetToUpdate = {'name' : 'Michael', 'owner': 'Michael', 'height' : 12, 'age':21}
+        whatToUpdate = {'name' : 'Michael2', 'owner': 'Michael2', 'age':22, 'year': 'senior'}
+        self.assertEqual(updateWidget(widgetToUpdate, whatToUpdate), {'name': 'Michael2', 'owner': 'Michael', 'age' : 22, 'height':12, 'year':'senior'})
+        self.assertNotEqual(updateWidget(widgetToUpdate, whatToUpdate), {'name': 'Michael2', 'owner': 'Michael2', 'age' : 22, 'height':12, 'year':'senior'})
+        
+        
 
     
 

@@ -14,7 +14,12 @@ def main():
         isTable = True
     if sys.argv[2] == '-sqs':
         isSQS = True
-    consumer(bucket2, destination, isTable, isSQS)
+
+    session = boto3.Session()
+    if session.get_credentials() is None:
+        print("AWS credentials are not available.")
+    else:
+        consumer(bucket2, destination, isTable, isSQS)
 
 
 def consumer(bucket2, destination, isTable, isSQS):
@@ -25,9 +30,9 @@ def consumer(bucket2, destination, isTable, isSQS):
     logger = logging.getLogger()
 
     logger.setLevel(logging.INFO)
-    s3 = boto3.client("s3")
-    sqs = boto3.client('sqs')
-    database = boto3.resource("dynamodb")
+    s3 = boto3.client("s3", region_name='us-east-1')
+    sqs = boto3.client('sqs', region_name='us-east-1')
+    database = boto3.resource("dynamodb", region_name='us-east-1')
     startTime = time.time()
     endTime = time.time()
     while endTime - startTime < 50:
